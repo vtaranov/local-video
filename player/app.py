@@ -60,11 +60,13 @@ def scan_media():
     for vtt in sorted(directory.glob("*.vtt")):
         stem = vtt.name[: -len(".vtt")]
         code = lang_from_name(stem, video_stem)
+        summary = f"{stem}.summary.md"
         tracks.append(
             {
                 "file": vtt.name,
                 "lang": code,
                 "label": LANG_LABELS.get(code.lower(), code.upper()),
+                "summary": summary if (directory / summary).is_file() else None,
             }
         )
 

@@ -8,10 +8,12 @@ const titleEl = document.getElementById("title");
 const folderForm = document.getElementById("folder-form");
 const folderInput = document.getElementById("folder-input");
 const folderMsg = document.getElementById("folder-msg");
+const summaryEl = document.getElementById("summary");
 
 let cues = [];          // {start, end, text, el}
 let activeIndex = -1;
 let autoscroll = true;
+let summaryByFile = {}; // имя .vtt -> имя .summary.md (или null)
 
 // --- разбор времени VTT: "HH:MM:SS.mmm" или "MM:SS.mmm" -> секунды ---
 function parseTime(t) {
@@ -156,6 +158,76 @@ async function loadTrack(file) {
   renderCues();
 }
 
+// --- саммари (Markdown) ---
+function escapeHtml(s) {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+// таймкоды MM:SS / H:MM:SS -> кликабельный span с секундами
+function linkTimecodes(html) {
+  return html.replace(/\b(\d{1,2}):([0-5]\d)(?::([0-5]\d))?\b/g, (m, a, b, c) => {
+    const secs = c === undefined
+      ? (+a) * 60 + (+b)
+      : (+a) * 3600 + (+b) * 60 + (+c);
+    return `<span class="ts" data-secs="${secs}">${m}</span>`;
+  });
+}
+
+function inlineMd(text) {
+  let h = escapeHtml(text);
+  h = h.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+  h = h.replace(/\*(.+?)\*/g, "<em>$1</em>");
+  return linkTimecodes(h);
+}
+
+function renderMarkdown(md) {
+  const lines = md.replace(/\r/g, "").split("\n");
+  const out = [];
+  let inList = false;
+  const closeList = () => { if (inList) { out.push("</ul>"); inList = false; } };
+
+  for (const line of lines) {
+    const t = line.trim();
+    if (!t) { closeList(); continue; }
+
+    let m;
+    if ((m = t.match(/^(#{1,3})\s+(.*)$/))) {
+      closeList();
+      const lvl = m[1].length;
+      out.push(`<h${lvl}>${inlineMd(m[2])}</h${lvl}>`);
+    } else if ((m = t.match(/^[*-]\s+(.*)$/))) {
+      if (!inList) { out.push("<ul>"); inList = true; }
+      out.push(`<li>${inlineMd(m[1])}</li>`);
+    } else if (/^\*[^*].*\*$/.test(t)) {
+      closeList();
+      out.push(`<p class="subtle">${inlineMd(t.slice(1, -1))}</p>`);
+    } else {
+      closeList();
+      out.push(`<p>${inlineMd(t)}</p>`);
+    }
+  }
+  closeList();
+  return out.join("\n");
+}
+
+async function loadSummary(file) {
+  if (!file) {
+    summaryEl.innerHTML = "";
+    return;
+  }
+  const res = await fetch(`/media/${encodeURIComponent(file)}`);
+  if (!res.ok) { summaryEl.innerHTML = ""; return; }
+  summaryEl.innerHTML = renderMarkdown(await res.text());
+  summaryEl.scrollTop = 0;
+}
+
+summaryEl.addEventListener("click", (e) => {
+  const ts = e.target.closest(".ts");
+  if (!ts) return;
+  video.currentTime = Number(ts.dataset.secs);
+  video.play();
+});
+
 function applyMedia(data) {
   if (data.dir) folderInput.value = data.dir;
 
@@ -177,21 +249,29 @@ function applyMedia(data) {
 
   langSelect.innerHTML = "";
   langSelect.disabled = !data.tracks.length;
+  summaryByFile = {};
   if (!data.tracks.length) {
     cues = [];
     cuesEl.innerHTML = '<div class="empty">Транскрипты не найдены</div>';
+    summaryEl.innerHTML = "";
     return;
   }
   for (const t of data.tracks) {
+    summaryByFile[t.file] = t.summary;
     const opt = document.createElement("option");
     opt.value = t.file;
     opt.textContent = t.label;
     langSelect.appendChild(opt);
   }
-  loadTrack(data.tracks[0].file);
+  selectTrack(data.tracks[0].file);
 }
 
-langSelect.addEventListener("change", () => loadTrack(langSelect.value));
+function selectTrack(file) {
+  loadTrack(file);
+  loadSummary(summaryByFile[file]);
+}
+
+langSelect.addEventListener("change", () => selectTrack(langSelect.value));
 
 folderForm.addEventListener("submit", async (e) => {
   e.preventDefault();
