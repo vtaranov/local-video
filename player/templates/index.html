@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Видеоплеер с транскриптом</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <header>
+    <h1 id="title">Видеоплеер</h1>
+    <form id="folder-form" class="folder-bar">
+      <input id="folder-input" type="text" placeholder="Путь к папке с видео…" spellcheck="false">
+      <button type="submit">Открыть папку</button>
+      <span id="folder-msg"></span>
+    </form>
+  </header>
+
+  <main>
+    <section class="player">
+      <video id="video" controls preload="metadata"></video>
+    </section>
+
+    <aside class="transcript">
+      <div class="controls">
+        <select id="lang-select" title="Язык транскрипта"></select>
+        <button id="autoscroll-btn" class="toggle on" title="Автоскролл">⭿ Автоскролл</button>
+      </div>
+      <div class="search">
+        <input id="search-input" type="search" placeholder="Поиск по транскрипту…">
+        <span id="search-count"></span>
+      </div>
+      <div id="cues" class="cues"></div>
+    </aside>
+  </main>
+
+  <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>

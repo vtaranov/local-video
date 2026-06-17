@@ -1,0 +1,38 @@
+# local-video (skill)
+
+Claude Code Skill: скачивание видео с YouTube и получение субтитров на русском.
+Оркеструет Claude в интерактивном режиме; скрипты выполняют детерминированные операции.
+
+## Установка зависимостей
+
+```bash
+# системно
+brew install ffmpeg
+
+# python (в активном окружении)
+pip install -r requirements.txt
+
+# модель перевода
+ollama pull gemma4:latest      # уже установлена
+```
+
+## Скрипты (`scripts/`)
+
+| Скрипт | Назначение | Вывод |
+|---|---|---|
+| `probe.py <url>` | метаданные + список дорожек субтитров | JSON |
+| `download_video.py <url> --out DIR` | скачать видео | `{video_path}` |
+| `fetch_subs.py <url> --langs en,es --out DIR [--auto]` | скачать субтитры → `.vtt` | `{files}` |
+| `transcribe.py <media> --out FILE.vtt [--model medium] [--lang en]` | транскрипция Whisper | `{subtitle_path, language}` |
+| `translate.py <in> --out OUT.vtt [--model gemma4:latest]` | перевод на русский | `{output_path}` |
+
+`subs.py` — общий модуль: парсинг `.srt`/`.vtt`, сборка `.vtt`, детект языка.
+Запускать скрипты из каталога `scripts/` (там лежит `subs.py`).
+
+## Принципы
+
+- Видео качается всегда; выходная папка задаётся аргументом.
+- Субтитры на выходе всегда `.vtt`; вход — `.srt` и `.vtt`.
+- Без hardsub. Перевод локальный (Ollama), без облачных API.
+
+Полная инструкция по работе — в `SKILL.md`.

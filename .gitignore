@@ -1,0 +1,21 @@
+# Окружения
+venv/
+.venv/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# Модели и медиа (большие, генерируемые)
+models/
+output/
+
+# Локальные настройки Claude Code
+.claude/settings.local.json
+
+# macOS
+.DS_Store
+
+# Логи
+*.log
