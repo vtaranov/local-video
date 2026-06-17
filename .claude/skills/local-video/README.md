@@ -25,6 +25,7 @@ ollama pull gemma4:latest      # уже установлена
 | `fetch_subs.py <url> --langs en,es --out DIR [--auto]` | скачать субтитры → `.vtt` | `{files}` |
 | `transcribe.py <media> --out FILE.vtt [--model medium] [--lang en]` | транскрипция Whisper | `{subtitle_path, language}` |
 | `translate.py <in> --out OUT.vtt [--model gemma4:latest]` | перевод на русский | `{output_path}` |
+| `summarize.py <in> --out OUT.md [--model gemma4:latest] [--lang ru]` | саммари транскрипта (Markdown, на его языке) | `{output_path}` |
 
 `subs.py` — общий модуль: парсинг `.srt`/`.vtt`, сборка `.vtt`, детект языка.
 Запускать скрипты из каталога `scripts/` (там лежит `subs.py`).

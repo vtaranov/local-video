@@ -36,6 +36,7 @@ local-video/.claude/skills/local-video/
 │   ├── fetch_subs.py           # скачать выбранные дорожки субтитров
 │   ├── transcribe.py           # faster-whisper: аудио → .vtt
 │   ├── translate.py            # Ollama gemma4: .vtt → русский .vtt
+│   ├── summarize.py            # Ollama: транскрипт → саммари .md (на его языке)
 │   └── subs.py                 # общий модуль: парсинг srt/vtt + детект языка
 ├── requirements.txt
 └── README.md
@@ -47,8 +48,17 @@ local-video/.claude/skills/local-video/
 
 ```
 probe → решение/вопрос пользователю → download_video
-      → (fetch_subs ИЛИ transcribe) → если не русский: translate → итог
+      → (fetch_subs ИЛИ transcribe) → если не русский: translate
+      → summarize по КАЖДОМУ транскрипту (на его языке) → итог
 ```
+
+## Саммари
+
+- По **каждому** транскрипту (оригинал и перевод) делается саммари на его языке.
+- Имя файла: `<name>.<lang>.summary.md` (Markdown, рядом с видео и `.vtt`).
+- Модель — та же, что для перевода (по умолчанию `gemma4:latest`).
+- Структура: краткое содержание, ключевые тезисы, структура по таймкодам.
+- Для длинных транскриптов — map-reduce (поблочно + финальный свод).
 
 ## Интерактив (обсуждается с пользователем)
 
