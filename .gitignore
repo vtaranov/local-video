@@ -14,6 +14,9 @@ output/
 # Локальные настройки Claude Code
 .claude/settings.local.json
 
+# Личный журнал решений (не для публичного репозитория)
+PROJECT_NOTES.md
+
 # macOS
 .DS_Store
 
