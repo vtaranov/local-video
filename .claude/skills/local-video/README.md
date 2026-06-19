@@ -26,6 +26,8 @@ ollama pull gemma4:latest      # уже установлена
 | `transcribe.py <media> --out FILE.vtt [--model medium] [--lang en]` | транскрипция Whisper | `{subtitle_path, language}` |
 | `translate.py <in> --out OUT.vtt [--model gemma4:latest]` | перевод на русский | `{output_path}` |
 | `summarize.py <in> --out OUT.md [--model gemma4:latest] [--lang ru]` | саммари транскрипта (Markdown, на его языке) | `{output_path}` |
+| `download_model.py [--size small] [--out DIR] [--source modelscope\|hf-mirror\|hf]` | скачать CT2-модель faster-whisper | `{model_dir, source}` |
+| `config.py` | напечатать итоговую конфигурацию (дефолты + config.json) | JSON |
 
 `subs.py` — общий модуль: парсинг `.srt`/`.vtt`, сборка `.vtt`, детект языка.
 Запускать скрипты из каталога `scripts/` (там лежит `subs.py`).

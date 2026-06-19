@@ -55,8 +55,8 @@ if [ -n "${MODEL_DIR:-}" ] && [ -f "$MODEL_DIR/model.bin" ]; then
   echo "  ✓ модель faster-whisper: $MODEL_DIR"
 else
   echo "  ✗ модель faster-whisper не найдена: ${MODEL_DIR:-?}"
-  echo "    скачай CT2-модель в эту папку (например с ModelScope:"
-  echo "    pengzhendong/faster-whisper-<size>) или поправь whisper_model_dir в config.json"
+  echo "    скачай её командой:  python3 \"$SKILL_SRC/scripts/download_model.py\""
+  echo "    (или поправь whisper_model_dir в config.json)"
 fi
 
 echo

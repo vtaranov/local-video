@@ -68,9 +68,13 @@ local-video/
    доступным из любой папки (симлинк в `~/.claude/skills/`) и проверит окружение.
 4. Отредактируй `config.json` под себя (папка-библиотека, модель Whisper и путь к ней,
    модель Ollama, хост).
-5. Скачай модель faster-whisper (например, `small` или `medium`) в папку из
-   `whisper_model_dir`. Если прямая загрузка с Hugging Face медленная, можно взять ту же
-   модель в формате CTranslate2 с зеркала ModelScope (`pengzhendong/faster-whisper-<size>`).
+5. Скачай модель faster-whisper:
+   ```
+   python3 .claude/skills/local-video/scripts/download_model.py
+   ```
+   Размер и папка берутся из `config.json`. Скрипт качает CT2-модель с ModelScope
+   (быстрее на «зарезанном» канале) с авто-фолбэком на зеркало Hugging Face и сам HF.
+   Другой размер — флагом `--size medium`.
 
 ## Конфигурация
 
