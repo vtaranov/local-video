@@ -1,8 +1,11 @@
 """Скачивание выбранных дорожек субтитров (yt-dlp) и нормализация в .vtt.
 
 Использование:
-  python fetch_subs.py <URL> --langs en,es --out <DIR> [--auto]
+  python fetch_subs.py <URL> --langs en,es --out <DIR> [--auto] [--extractor-args "youtube:player_client=android"]
 --auto разрешает авто-сгенерированные субтитры (если ручных нет).
+--extractor-args можно указывать несколько раз; формат — как у одноимённой опции yt-dlp.
+Полезно как обход, если yt-dlp ошибочно сообщает "video is not available" (баг
+дефолтного web-клиента) — попробовать player_client=android.
 Вывод: JSON {"files": [{"lang":..., "path":...}, ...]}.
 """
 from __future__ import annotations
@@ -21,6 +24,7 @@ def main(argv: list[str]) -> int:
     ap.add_argument("--langs", required=True, help="коды языков через запятую")
     ap.add_argument("--out", required=True)
     ap.add_argument("--auto", action="store_true", help="разрешить авто-субтитры")
+    ap.add_argument("--extractor-args", dest="extractor_args", action="append", default=None)
     args = ap.parse_args(argv)
 
     try:
@@ -44,6 +48,8 @@ def main(argv: list[str]) -> int:
         "subtitlesformat": "vtt",
         "outtmpl": str(out_dir / "%(title)s.%(ext)s"),
     }
+    if args.extractor_args:
+        opts["extractor_args"] = subs_mod.parse_extractor_args(args.extractor_args)
     try:
         with YoutubeDL(opts) as ydl:
             info = ydl.extract_info(args.url, download=True)

@@ -30,6 +30,7 @@ ollama pull gemma4:latest      # уже установлена
 | `summarize.py <in> --out OUT.md [--model gemma4:latest] [--lang ru]` | саммари транскрипта (Markdown, на его языке) | `{output_path}` |
 | `download_model.py [--size small] [--out DIR] [--source modelscope\|hf-mirror\|hf]` | скачать CT2-модель faster-whisper | `{model_dir, source}` |
 | `config.py` | напечатать итоговую конфигурацию (дефолты + config.json) | JSON |
+| `play.py` | найти веб-плеер (`player/`) и интерпретатор для запуска | JSON |
 
 `subs.py` — общий модуль: парсинг `.srt`/`.vtt`, сборка `.vtt`, детект языка.
 Запускать скрипты из каталога `scripts/` (там лежит `subs.py`).

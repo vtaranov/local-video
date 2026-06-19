@@ -1,6 +1,9 @@
 """Скачивание видео (yt-dlp). Видео качается всегда.
 
-Использование:  python download_video.py <URL> --out <DIR>
+Использование:  python download_video.py <URL> --out <DIR> [--extractor-args "youtube:player_client=android"]
+--extractor-args можно указывать несколько раз; формат — как у одноимённой опции yt-dlp.
+Полезно как обход, если yt-dlp ошибочно сообщает "video is not available" (баг
+дефолтного web-клиента) — попробовать player_client=android.
 Вывод: JSON {"video_path": ..., "title": ...}.
 """
 from __future__ import annotations
@@ -10,11 +13,14 @@ import json
 import sys
 from pathlib import Path
 
+import subs as subs_mod
+
 
 def main(argv: list[str]) -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("url")
     ap.add_argument("--out", required=True, help="папка для сохранения")
+    ap.add_argument("--extractor-args", dest="extractor_args", action="append", default=None)
     args = ap.parse_args(argv)
 
     try:
@@ -42,6 +48,8 @@ def main(argv: list[str]) -> int:
         "restrictfilenames": False,
         "progress_hooks": [hook],
     }
+    if args.extractor_args:
+        opts["extractor_args"] = subs_mod.parse_extractor_args(args.extractor_args)
     try:
         with YoutubeDL(opts) as ydl:
             info = ydl.extract_info(args.url, download=True)

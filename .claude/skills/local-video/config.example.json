@@ -3,5 +3,6 @@
   "whisper_model": "small",
   "whisper_model_dir": "~/ai-models/faster-whisper/small",
   "ollama_model": "gemma4:latest",
-  "ollama_host": "http://localhost:11434"
+  "ollama_host": "http://localhost:11434",
+  "player_dir": ""
 }

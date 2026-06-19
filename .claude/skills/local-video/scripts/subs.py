@@ -111,6 +111,25 @@ def write_vtt(segments: list[Segment], path: str | Path) -> Path:
     return out
 
 
+def parse_extractor_args(specs: list[str]) -> dict:
+    """Парсит CLI-спеки yt-dlp вида 'youtube:player_client=android,web;formats=missing_pot'
+    в формат опции extractor_args для YoutubeDL (тот же синтаксис, что у --extractor-args
+    самого yt-dlp; можно передавать несколько спек — они объединяются)."""
+    result: dict[str, dict[str, list[str]]] = {}
+    for spec in specs:
+        key, _, vals = spec.partition(":")
+        key = key.strip().lower().replace("-", "_")
+        args: dict[str, list[str]] = {}
+        for arg in vals.split(";") if vals else []:
+            if not arg:
+                continue
+            argkey, _, argval = arg.partition("=")
+            argkey = argkey.strip().lower().replace("-", "_")
+            args[argkey] = [v.replace(r"\,", ",").strip() for v in re.split(r"(?<!\\),", argval)]
+        result.setdefault(key, {}).update(args)
+    return result
+
+
 def detect_language(segments: list[Segment], sample: int = 80) -> str | None:
     """Возвращает ISO-код языка по тексту субтитров или None."""
     try:

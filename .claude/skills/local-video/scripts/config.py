@@ -21,9 +21,10 @@ DEFAULTS = {
     "whisper_model_dir": "~/ai-models/faster-whisper/small",
     "ollama_model": "gemma4:latest",
     "ollama_host": "http://localhost:11434",
+    "player_dir": "",  # пусто → плеер ищется как соседний player/ (см. play.py)
 }
 # поля, которые нужно разворачивать как пути (~ → домашняя папка)
-PATH_KEYS = {"library", "whisper_model_dir"}
+PATH_KEYS = {"library", "whisper_model_dir", "player_dir"}
 
 
 def _skill_root() -> Path:
@@ -51,7 +52,7 @@ def load() -> dict:
                 pass
             break
     for k in PATH_KEYS:
-        if isinstance(cfg.get(k), str):
+        if isinstance(cfg.get(k), str) and cfg[k]:
             cfg[k] = str(Path(cfg[k]).expanduser())
     return cfg
 

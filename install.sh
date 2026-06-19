@@ -34,7 +34,22 @@ else
   echo "✓ скилл доступен глобально: $SKILL_DST → $SKILL_SRC"
 fi
 
-# 3. проверка окружения
+# 3. настройка плеера (venv + Flask)
+PLAYER="$REPO/player"
+if [ -f "$PLAYER/requirements.txt" ]; then
+  echo
+  if [ ! -x "$PLAYER/venv/bin/python" ]; then
+    echo "плеер: создаю venv…"
+    python3 -m venv "$PLAYER/venv"
+  fi
+  if "$PLAYER/venv/bin/python" -m pip install -q -r "$PLAYER/requirements.txt"; then
+    echo "✓ плеер готов (venv + Flask)"
+  else
+    echo "⚠ не удалось установить зависимости плеера ($PLAYER/requirements.txt)"
+  fi
+fi
+
+# 4. проверка окружения
 echo
 echo "проверка окружения:"
 check() { if command -v "$1" >/dev/null 2>&1; then echo "  ✓ $1"; else echo "  ✗ $1 — $2"; fi; }
@@ -48,7 +63,7 @@ else
   echo "  ✗ python-зависимости — pip install -r \"$SKILL_SRC/requirements.txt\""
 fi
 
-# 4. модель faster-whisper
+# 5. модель faster-whisper
 MODEL_DIR="$(python3 "$SKILL_SRC/scripts/config.py" 2>/dev/null \
   | python3 -c "import sys,json;print(json.load(sys.stdin)['whisper_model_dir'])" 2>/dev/null || true)"
 if [ -n "${MODEL_DIR:-}" ] && [ -f "$MODEL_DIR/model.bin" ]; then
