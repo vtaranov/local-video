@@ -22,6 +22,7 @@ ollama pull gemma4:latest      # уже установлена
 |---|---|---|
 | `probe.py <url>` | метаданные (`id`, `extractor`, `title`, …) + дорожки субтитров | JSON |
 | `library.py {index\|folder\|sidecar}` | имя папки `<title> [id]`, провенанс `.source.json`, дедуп по id | JSON |
+| `list_playlist.py <url>` | перечислить видео плейлиста/канала без скачивания | JSON |
 | `download_video.py <url> --out DIR` | скачать видео | `{video_path}` |
 | `fetch_subs.py <url> --langs en,es --out DIR [--auto]` | скачать субтитры → `.vtt` | `{files}` |
 | `transcribe.py <media> --out FILE.vtt [--model medium] [--lang en]` | транскрипция Whisper | `{subtitle_path, language}` |
