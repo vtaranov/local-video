@@ -5,10 +5,14 @@ const searchInput = document.getElementById("search-input");
 const searchCount = document.getElementById("search-count");
 const cuesEl = document.getElementById("cues");
 const titleEl = document.getElementById("title");
-const folderForm = document.getElementById("folder-form");
-const folderInput = document.getElementById("folder-input");
-const folderMsg = document.getElementById("folder-msg");
 const summaryEl = document.getElementById("summary");
+const homeBtn = document.getElementById("home-btn");
+const libSection = document.getElementById("library");
+const playerView = document.getElementById("player-view");
+const libGrid = document.getElementById("lib-grid");
+const libForm = document.getElementById("lib-form");
+const libInput = document.getElementById("lib-input");
+const libMsg = document.getElementById("lib-msg");
 
 let cues = [];          // {start, end, text, el}
 let activeIndex = -1;
@@ -229,8 +233,6 @@ summaryEl.addEventListener("click", (e) => {
 });
 
 function applyMedia(data) {
-  if (data.dir) folderInput.value = data.dir;
-
   if (!data.video) {
     titleEl.textContent = "Видео не найдено";
     document.title = "Видеоплеер";
@@ -273,31 +275,89 @@ function selectTrack(file) {
 
 langSelect.addEventListener("change", () => selectTrack(langSelect.value));
 
-folderForm.addEventListener("submit", async (e) => {
+// --- библиотека / переключение видов ---
+function showLibrary(data) {
+  libInput.value = data.library || "";
+  libGrid.innerHTML = "";
+  if (!data.videos || !data.videos.length) {
+    libGrid.innerHTML = '<div class="empty">В библиотеке пока нет видео</div>';
+  } else {
+    const frag = document.createDocumentFragment();
+    for (const v of data.videos) {
+      const card = document.createElement("button");
+      card.className = "lib-card";
+      card.innerHTML =
+        `<span class="lib-title"></span>` +
+        `<span class="lib-langs">${v.langs.map((l) => `<span class="tag">${l}</span>`).join("")}</span>`;
+      card.querySelector(".lib-title").textContent = v.title;
+      card.addEventListener("click", () => openVideo(v.dir));
+      frag.appendChild(card);
+    }
+    libGrid.appendChild(frag);
+  }
+  titleEl.textContent = "Библиотека";
+  document.title = "Библиотека";
+  homeBtn.classList.add("hidden");
+  playerView.classList.add("hidden");
+  libSection.classList.remove("hidden");
+}
+
+function showPlayer(data) {
+  libSection.classList.add("hidden");
+  playerView.classList.remove("hidden");
+  homeBtn.classList.remove("hidden");
+  applyMedia(data);
+}
+
+async function openVideo(dir) {
+  const res = await fetch("/api/open", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ dir }),
+  });
+  const data = await res.json();
+  if (res.ok) showPlayer(data);
+}
+
+async function goHome() {
+  const data = await (await fetch("/api/home", { method: "POST" })).json();
+  // остановить воспроизведение при выходе в список
+  video.pause();
+  showLibrary(data);
+}
+
+homeBtn.addEventListener("click", goHome);
+
+libForm.addEventListener("submit", async (e) => {
   e.preventDefault();
-  const path = folderInput.value.trim();
+  const path = libInput.value.trim();
   if (!path) return;
-  folderMsg.textContent = "…";
-  folderMsg.className = "";
-  const res = await fetch("/api/folder", {
+  libMsg.textContent = "…";
+  libMsg.className = "";
+  const res = await fetch("/api/library", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ path }),
   });
   const data = await res.json();
   if (!res.ok) {
-    folderMsg.textContent = data.error || "Ошибка";
-    folderMsg.className = "err";
+    libMsg.textContent = data.error || "Ошибка";
+    libMsg.className = "err";
     return;
   }
-  folderMsg.textContent = "✓";
-  folderMsg.className = "ok";
-  applyMedia(data);
+  libMsg.textContent = "";
+  showLibrary(data);
 }, false);
 
 async function init() {
-  const data = await (await fetch("/api/media")).json();
-  applyMedia(data);
+  const media = await (await fetch("/api/media")).json();
+  if (media.current && media.video !== undefined) {
+    // плеер запущен с конкретной папкой (--dir)
+    showPlayer(media);
+  } else {
+    const lib = await (await fetch("/api/library")).json();
+    showLibrary(lib);
+  }
 }
 
 init();

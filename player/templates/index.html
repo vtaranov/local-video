@@ -8,15 +8,20 @@
 </head>
 <body>
   <header>
-    <h1 id="title">Видеоплеер</h1>
-    <form id="folder-form" class="folder-bar">
-      <input id="folder-input" type="text" placeholder="Путь к папке с видео…" spellcheck="false">
-      <button type="submit">Открыть папку</button>
-      <span id="folder-msg"></span>
-    </form>
+    <button id="home-btn" class="home-btn hidden" title="К списку видео">← Библиотека</button>
+    <h1 id="title">Библиотека</h1>
   </header>
 
-  <main>
+  <section id="library" class="library">
+    <form id="lib-form" class="folder-bar">
+      <input id="lib-input" type="text" placeholder="Путь к папке-библиотеке…" spellcheck="false">
+      <button type="submit">Сменить</button>
+      <span id="lib-msg"></span>
+    </form>
+    <div id="lib-grid" class="lib-grid"></div>
+  </section>
+
+  <main id="player-view" class="hidden">
     <section class="player">
       <video id="video" controls preload="metadata"></video>
       <div id="summary" class="summary"></div>
