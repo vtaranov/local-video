@@ -39,6 +39,8 @@ def main(argv: list[str]) -> int:
         return 1
 
     result = {
+        "id": info.get("id"),
+        "extractor": info.get("extractor_key") or info.get("extractor"),
         "title": info.get("title"),
         "duration": info.get("duration"),
         "uploader": info.get("uploader"),
