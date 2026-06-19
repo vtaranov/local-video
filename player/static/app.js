@@ -13,6 +13,7 @@ const libGrid = document.getElementById("lib-grid");
 const libForm = document.getElementById("lib-form");
 const libInput = document.getElementById("lib-input");
 const libMsg = document.getElementById("lib-msg");
+const loadingEl = document.getElementById("loading");
 
 let cues = [];          // {start, end, text, el}
 let activeIndex = -1;
@@ -297,12 +298,14 @@ function showLibrary(data) {
   }
   titleEl.textContent = "Библиотека";
   document.title = "Библиотека";
+  loadingEl.classList.add("hidden");
   homeBtn.classList.add("hidden");
   playerView.classList.add("hidden");
   libSection.classList.remove("hidden");
 }
 
 function showPlayer(data) {
+  loadingEl.classList.add("hidden");
   libSection.classList.add("hidden");
   playerView.classList.remove("hidden");
   homeBtn.classList.remove("hidden");

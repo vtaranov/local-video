@@ -78,6 +78,12 @@ h1 {
 
 .hidden { display: none !important; }
 
+.loading {
+  padding: 40px 20px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
 .home-btn {
   font: inherit;
   color: var(--text);
