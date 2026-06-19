@@ -64,11 +64,25 @@ local-video/
 
 1. Клонируй репозиторий.
 2. Поставь зависимости Python, ffmpeg и Ollama (см. «Требования»).
-3. Скачай модель faster-whisper (например, `small` или `medium`) в `models/`.
-   Если прямая загрузка с Hugging Face медленная, можно взять ту же модель в формате
-   CTranslate2 с зеркала ModelScope (`pengzhendong/faster-whisper-<size>`).
-4. (Опционально) Чтобы скилл был доступен из любой папки, а не только из этого
-   репозитория, скопируй/слинкуй `.claude/skills/local-video` в `~/.claude/skills/`.
+3. Запусти `./install.sh` — он создаст личный `config.json` из шаблона, сделает скилл
+   доступным из любой папки (симлинк в `~/.claude/skills/`) и проверит окружение.
+4. Отредактируй `config.json` под себя (папка-библиотека, модель Whisper и путь к ней,
+   модель Ollama, хост).
+5. Скачай модель faster-whisper (например, `small` или `medium`) в папку из
+   `whisper_model_dir`. Если прямая загрузка с Hugging Face медленная, можно взять ту же
+   модель в формате CTranslate2 с зеркала ModelScope (`pengzhendong/faster-whisper-<size>`).
+
+## Конфигурация
+
+Настройки — в `config.json` (создаётся из `config.example.json`, в git не попадает):
+
+| Поле | Назначение |
+|---|---|
+| `library` | папка-библиотека, куда складываются все видео (по подпапке на видео) |
+| `whisper_model` | размер модели Whisper (`tiny`/`base`/`small`/`medium`/…) |
+| `whisper_model_dir` | путь к локальной CTranslate2-модели faster-whisper |
+| `ollama_model` | модель Ollama для перевода и саммари |
+| `ollama_host` | адрес Ollama |
 
 ## Использование
 

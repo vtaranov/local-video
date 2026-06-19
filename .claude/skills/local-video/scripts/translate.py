@@ -18,6 +18,9 @@ import urllib.request
 from pathlib import Path
 
 import subs as subs_mod
+import config as config_mod
+
+_CFG = config_mod.load()
 
 LANG_NAME = {"ru": "русский", "en": "английский"}
 
@@ -88,10 +91,10 @@ def main(argv: list[str]) -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("input")
     ap.add_argument("--out", required=True)
-    ap.add_argument("--model", default="gemma4:latest")
+    ap.add_argument("--model", default=_CFG["ollama_model"])
     ap.add_argument("--target", default="ru")
     ap.add_argument("--batch", type=int, default=40)
-    ap.add_argument("--host", default="http://localhost:11434")
+    ap.add_argument("--host", default=_CFG["ollama_host"])
     args = ap.parse_args(argv)
 
     src = Path(args.input)

@@ -13,13 +13,17 @@ import sys
 from pathlib import Path
 
 import subs as subs_mod
+import config as config_mod
+
+_CFG = config_mod.load()
 
 
 def main(argv: list[str]) -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("media", help="путь к видео или аудио")
     ap.add_argument("--out", required=True, help="путь к выходному .vtt")
-    ap.add_argument("--model", default="medium")
+    ap.add_argument("--model", default=_CFG["whisper_model_dir"],
+                    help="путь к CT2-модели или имя (по умолчанию из config.json)")
     ap.add_argument("--lang", default=None, help="язык оригинала (опц.)")
     ap.add_argument("--compute-type", default="int8")
     args = ap.parse_args(argv)

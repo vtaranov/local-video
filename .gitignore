@@ -17,6 +17,9 @@ output/
 # Личный журнал решений (не для публичного репозитория)
 PROJECT_NOTES.md
 
+# Личная конфигурация (шаблон config.example.json — в репозитории)
+.claude/skills/local-video/config.json
+
 # macOS
 .DS_Store
 
