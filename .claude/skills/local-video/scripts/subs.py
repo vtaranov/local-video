@@ -4,6 +4,7 @@
 """
 from __future__ import annotations
 
+import json
 import re
 from dataclasses import dataclass
 from pathlib import Path
@@ -94,6 +95,67 @@ def parse_text(raw: str) -> list[Segment]:
             segments[-1].end = end
             continue
         segments.append(Segment(start, end, text))
+    return segments
+
+
+def parse_json3(raw: str, max_words: int = 16) -> list[Segment]:
+    """Парсит сырые авто-субтитры YouTube в формате json3.
+
+    В отличие от .vtt-экспорта, события здесь не дублируют текст (каждое —
+    новый фрагмент речи); но их `dDurationMs` — это время показа в
+    перекрывающемся окне прокрутки, а не длительность самой речи, поэтому
+    соседние фрагменты по таймингу всё равно перекрываются. Конец каждого
+    фрагмента обрезается началом следующего перед склейкой в фразы — иначе
+    итоговые реплики получаются с пересекающимися/немонотонными таймингами.
+    Фразы собираются по паузам в речи и знакам конца предложения; безостановочная
+    речь (доклад без пауз) дополнительно дробится по max_words, чтобы не
+    получить одну реплику на 70+ секунд — нечитаемую в плеере.
+    """
+    data = json.loads(raw)
+    chunks: list[tuple[int, int, str]] = []
+    for ev in data.get("events", []):
+        segs = ev.get("segs")
+        if not segs:
+            continue
+        text = "".join(s.get("utf8", "") for s in segs).strip()
+        if not text:
+            continue
+        start_ms = ev.get("tStartMs", 0)
+        end_ms = start_ms + ev.get("dDurationMs", 0)
+        chunks.append((start_ms, end_ms, text))
+    for i in range(len(chunks)):
+        start_ms, end_ms, text = chunks[i]
+        if i + 1 < len(chunks):
+            end_ms = min(end_ms, chunks[i + 1][0])
+        chunks[i] = (start_ms, max(end_ms, start_ms), text)
+
+    segments: list[Segment] = []
+    buf_start: float | None = None
+    buf_end: float = 0.0
+    buf_text = ""
+    prev_end_ms: int | None = None
+
+    def flush() -> None:
+        nonlocal buf_start, buf_text
+        text = buf_text.strip()
+        if text and buf_start is not None:
+            segments.append(Segment(buf_start, buf_end, text))
+        buf_start = None
+        buf_text = ""
+
+    for start_ms, end_ms, chunk in chunks:
+        if buf_text and prev_end_ms is not None and start_ms - prev_end_ms > 600:
+            flush()
+        elif buf_text and len(buf_text.split()) >= max_words:
+            flush()
+        if buf_start is None:
+            buf_start = start_ms / 1000.0
+        buf_end = end_ms / 1000.0
+        buf_text += (" " if buf_text else "") + chunk
+        prev_end_ms = end_ms
+        if len(buf_text.split()) >= 3 and re.search(r"[.!?][\"'”)\]]*$", buf_text):
+            flush()
+    flush()
     return segments
 
 

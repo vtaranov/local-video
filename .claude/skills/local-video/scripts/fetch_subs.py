@@ -2,7 +2,11 @@
 
 Использование:
   python fetch_subs.py <URL> --langs en,es --out <DIR> [--auto] [--extractor-args "youtube:player_client=android"]
---auto разрешает авто-сгенерированные субтитры (если ручных нет).
+--auto разрешает авто-сгенерированные субтитры (если ручных нет). Для авто-субтитров
+скачивается формат json3 (не vtt!) и конвертируется через subs.parse_json3 — родной
+vtt-экспорт YouTube для авто-субтитров эмулирует побуквенную прокрутку перекрывающимися
+репликами («I'm excited» / «I'm excited to be here» / ...), что портит и транскрипт,
+и перевод. json3 этого артефакта не содержит.
 --extractor-args можно указывать несколько раз; формат — как у одноимённой опции yt-dlp.
 Полезно как обход, если yt-dlp ошибочно сообщает "video is not available" (баг
 дефолтного web-клиента) — попробовать player_client=android.
@@ -37,6 +41,7 @@ def main(argv: list[str]) -> int:
     out_dir = Path(args.out)
     out_dir.mkdir(parents=True, exist_ok=True)
 
+    ext = "json3" if args.auto else "vtt"
     opts = {
         "quiet": True,
         "no_warnings": True,
@@ -45,7 +50,7 @@ def main(argv: list[str]) -> int:
         "writesubtitles": True,
         "writeautomaticsub": args.auto,
         "subtitleslangs": langs,
-        "subtitlesformat": "vtt",
+        "subtitlesformat": ext,
         "outtmpl": str(out_dir / "%(title)s.%(ext)s"),
     }
     if args.extractor_args:
@@ -61,16 +66,24 @@ def main(argv: list[str]) -> int:
     stem = Path(requested).with_suffix("")
     files = []
     for lang in langs:
-        # yt-dlp пишет <stem>.<lang>.vtt
-        cand = Path(f"{stem}.{lang}.vtt")
+        # yt-dlp пишет <stem>.<lang>.<ext>
+        cand = Path(f"{stem}.{lang}.{ext}")
         if not cand.exists():
-            matches = list(out_dir.glob(f"*.{lang}.vtt"))
+            matches = list(out_dir.glob(f"*.{lang}.{ext}"))
             cand = matches[0] if matches else None
-        if cand and cand.exists():
+        if not (cand and cand.exists()):
+            continue
+        if ext == "json3":
+            segs = subs_mod.parse_json3(cand.read_text(encoding="utf-8", errors="ignore"))
+            vtt_path = cand.with_suffix(".vtt")
+            subs_mod.write_vtt(segs, vtt_path)
+            cand.unlink()
+            cand = vtt_path
+        else:
             # нормализуем через наш парсер -> чистый .vtt
             segs = subs_mod.parse_file(cand)
             subs_mod.write_vtt(segs, cand)
-            files.append({"lang": lang, "path": str(cand)})
+        files.append({"lang": lang, "path": str(cand)})
 
     if not files:
         print(json.dumps(

@@ -22,6 +22,7 @@ DEFAULTS = {
     "ollama_model": "gemma4:latest",
     "ollama_host": "http://localhost:11434",
     "player_dir": "",  # пусто → плеер ищется как соседний player/ (см. play.py)
+    "translate_progress_step_pct": 10,  # шаг прогресса translate.py, % (для Monitor)
 }
 # поля, которые нужно разворачивать как пути (~ → домашняя папка)
 PATH_KEYS = {"library", "whisper_model_dir", "player_dir"}
