@@ -36,6 +36,7 @@ import hashlib
 import json
 import os
 import sys
+import time
 import urllib.error
 import urllib.request
 from pathlib import Path
@@ -133,6 +134,17 @@ def _translate_safe(
     )
 
 
+def _fmt_duration(seconds: float) -> str:
+    seconds = max(0, int(round(seconds)))
+    m, s = divmod(seconds, 60)
+    h, m = divmod(m, 60)
+    if h:
+        return f"{h}ч{m:02d}м"
+    if m:
+        return f"{m}м{s:02d}с"
+    return f"{s}с"
+
+
 def _checkpoint_path(out: str) -> Path:
     return Path(str(out) + ".checkpoint.json")
 
@@ -206,26 +218,58 @@ def main(argv: list[str]) -> int:
     step = max(1, args.progress_step)
     last_reported = (len(translated) * 100 // len(texts)) if texts else 0
 
+    run_start_index = len(translated)
+    run_start_time = time.monotonic()
     try:
         i = len(translated)
         while i < len(texts):
             chunk = texts[i:i + args.batch]
             context_before = " ".join(translated[-CONTEXT_LINES:])
             context_after = " ".join(texts[i + len(chunk):i + len(chunk) + CONTEXT_LINES])
+            batch_start_time = time.monotonic()
             translated.extend(_translate_safe(
                 args.host, args.model, args.target, chunk, context_before, context_after
             ))
+            batch_elapsed = time.monotonic() - batch_start_time
             i += len(chunk)
             _save_checkpoint(ckpt_path, key, translated)
             pct = i * 100 // len(texts)
             if pct >= last_reported + step or i >= len(texts):
-                print(f"PROGRESS {pct}% ({i}/{len(texts)} реплик)", file=sys.stderr, flush=True)
+                done_this_run = i - run_start_index
+                elapsed_this_run = time.monotonic() - run_start_time
+                remaining = len(texts) - i
+                eta = (
+                    _fmt_duration(remaining * elapsed_this_run / done_this_run)
+                    if done_this_run else "?"
+                )
+                print(
+                    f"PROGRESS {pct}% ({i}/{len(texts)} реплик, "
+                    f"батч {_fmt_duration(batch_elapsed)}, осталось ~{eta})",
+                    file=sys.stderr, flush=True,
+                )
                 last_reported = pct
     except urllib.error.URLError as e:
         print(json.dumps(
             {"error": f"Ollama недоступен ({args.host}): {e}"}, ensure_ascii=False
         ))
         return 1
+
+    if len(translated) != len(texts):
+        print(json.dumps({
+            "error": f"Несовпадение числа переводов: ожидалось {len(texts)}, "
+                     f"получено {len(translated)}"
+        }, ensure_ascii=False))
+        return 1
+
+    fallback_count = sum(
+        1 for orig, tr in zip(texts, translated) if tr.strip() == orig.strip()
+    )
+    if fallback_count:
+        print(
+            f"[translate] предупреждение: {fallback_count}/{len(texts)} реплик "
+            "остались непереведёнными (язык оригинала после всех попыток)",
+            file=sys.stderr,
+        )
 
     for seg, txt in zip(segments, translated):
         seg.text = txt.strip()
@@ -240,6 +284,7 @@ def main(argv: list[str]) -> int:
         "segments": len(segments),
         "model": args.model,
         "target": args.target,
+        "untranslated_fallback": fallback_count,
     }, ensure_ascii=False, indent=2))
     return 0
 
