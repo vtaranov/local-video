@@ -1,7 +1,7 @@
 # local-video
 
 <!-- github-about
-description: Локально скачивает видео с YouTube и делает к нему субтитры и саммари на русском (yt-dlp + faster-whisper + Ollama). Оркеструется Claude Code; в комплекте веб-плеер с транскриптом.
+description: Локально скачивает видео с YouTube (и других совместимых с yt-dlp источников) и делает к нему субтитры и саммари на русском. Оркеструется Claude Code. Используются локальные модели для транскрибирования и перевода. В комплекте веб-плеер с транскриптом.
 topics: youtube, translation, subtitles, summarization, vtt, transcription, whisper, local-first, yt-dlp, faster-whisper, ollama, claude-code
 -->
 
