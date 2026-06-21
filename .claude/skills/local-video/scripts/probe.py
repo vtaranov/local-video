@@ -29,6 +29,7 @@ def main(argv: list[str]) -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("url")
     ap.add_argument("--extractor-args", dest="extractor_args", action="append", default=None)
+    subs_mod.add_cookie_args(ap)
     args = ap.parse_args(argv)
     url = args.url
     try:
@@ -40,6 +41,7 @@ def main(argv: list[str]) -> int:
     opts = {"quiet": True, "no_warnings": True, "skip_download": True}
     if args.extractor_args:
         opts["extractor_args"] = subs_mod.parse_extractor_args(args.extractor_args)
+    opts.update(subs_mod.cookie_opts(args))
     try:
         with YoutubeDL(opts) as ydl:
             info = ydl.extract_info(url, download=False)

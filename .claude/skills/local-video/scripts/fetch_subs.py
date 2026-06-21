@@ -29,6 +29,7 @@ def main(argv: list[str]) -> int:
     ap.add_argument("--out", required=True)
     ap.add_argument("--auto", action="store_true", help="разрешить авто-субтитры")
     ap.add_argument("--extractor-args", dest="extractor_args", action="append", default=None)
+    subs_mod.add_cookie_args(ap)
     args = ap.parse_args(argv)
 
     try:
@@ -55,6 +56,7 @@ def main(argv: list[str]) -> int:
     }
     if args.extractor_args:
         opts["extractor_args"] = subs_mod.parse_extractor_args(args.extractor_args)
+    opts.update(subs_mod.cookie_opts(args))
     try:
         with YoutubeDL(opts) as ydl:
             info = ydl.extract_info(args.url, download=True)

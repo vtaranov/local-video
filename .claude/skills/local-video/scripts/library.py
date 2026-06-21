@@ -5,7 +5,8 @@
 сайдкар, запасной вариант — ID в скобках в имени папки.
 
 Подкоманды:
-  index   --library DIR                                  → JSON [{id, title, dir}]
+  index   --library DIR                                  → JSON [{id, title, dir, transcripts}]
+          transcripts = {langs:[...], ru:bool, orig:[языки кроме ru]}
   folder  --library DIR --title T --id ID                → JSON {dir, exists}
   sidecar --dir D --id ID --url U --title T [--extractor E]  → пишет .source.json
 """
@@ -43,18 +44,36 @@ def _read_sidecar(d: Path) -> dict | None:
     return None
 
 
+def transcripts(d: Path) -> dict:
+    """Языки транскриптов в папке видео по файлам `<name>.<lang>.vtt`.
+
+    Возвращает {"langs": [...], "ru": bool, "orig": [языки кроме ru]}.
+    `ru` — есть ли русский перевод; `orig` — оригинальные дорожки (не ru).
+    """
+    langs: list[str] = []
+    for p in sorted(d.glob("*.vtt")):
+        parts = p.name.split(".")
+        if len(parts) >= 3:  # <name>.<lang>.vtt — берём предпоследний сегмент
+            lang = parts[-2].strip()
+            if lang and lang not in langs:
+                langs.append(lang)
+    return {"langs": langs, "ru": "ru" in langs, "orig": [l for l in langs if l != "ru"]}
+
+
 def index(library: Path) -> list[dict]:
     out: list[dict] = []
     if not library.is_dir():
         return out
     for d in sorted(p for p in library.iterdir() if p.is_dir()):
+        tr = transcripts(d)
         sc = _read_sidecar(d)
         if sc and sc.get("id"):
-            out.append({"id": sc["id"], "title": sc.get("title", d.name), "dir": str(d)})
+            out.append({"id": sc["id"], "title": sc.get("title", d.name),
+                        "dir": str(d), "transcripts": tr})
             continue
         m = _ID_IN_NAME.search(d.name)
         if m:
-            out.append({"id": m.group(1), "title": d.name, "dir": str(d)})
+            out.append({"id": m.group(1), "title": d.name, "dir": str(d), "transcripts": tr})
     return out
 
 

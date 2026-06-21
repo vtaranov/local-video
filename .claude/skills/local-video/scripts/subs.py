@@ -192,6 +192,34 @@ def parse_extractor_args(specs: list[str]) -> dict:
     return result
 
 
+def add_cookie_args(ap) -> None:
+    """Регистрирует общие флаги доступа к приватному/закрытому контенту через cookies.
+
+    --cookies-from-browser BROWSER[:PROFILE]  взять cookies из браузера
+        (chrome/safari/firefox/edge/brave/...); опционально профиль через двоеточие.
+    --cookies FILE                            путь к файлу cookies.txt (формат Netscape).
+    Оба формата — как у одноимённых опций yt-dlp.
+    """
+    ap.add_argument("--cookies-from-browser", dest="cookies_from_browser", default=None,
+                    help="взять cookies из браузера, напр. chrome или chrome:Profile 1")
+    ap.add_argument("--cookies", dest="cookies_file", default=None,
+                    help="путь к cookies.txt (Netscape)")
+
+
+def cookie_opts(args) -> dict:
+    """Фрагмент opts для YoutubeDL по флагам add_cookie_args (пустой, если флагов нет)."""
+    opts: dict = {}
+    cfb = getattr(args, "cookies_from_browser", None)
+    if cfb:
+        browser, _, profile = cfb.partition(":")
+        # формат API yt-dlp: (browser, profile, keyring, container)
+        opts["cookiesfrombrowser"] = (browser.strip().lower(), profile.strip() or None, None, None)
+    cookiefile = getattr(args, "cookies_file", None)
+    if cookiefile:
+        opts["cookiefile"] = cookiefile
+    return opts
+
+
 def detect_language(segments: list[Segment], sample: int = 80) -> str | None:
     """Возвращает ISO-код языка по тексту субтитров или None."""
     try:

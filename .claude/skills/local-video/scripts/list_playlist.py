@@ -1,21 +1,28 @@
 """Перечисление видео плейлиста/канала без скачивания (yt-dlp, flat).
 
-Использование:  python list_playlist.py "<PLAYLIST_URL>"
+Использование:
+  python list_playlist.py "<PLAYLIST_URL>" [--limit N] [--cookies-from-browser chrome] [--cookies FILE]
+--limit N        вернуть только первые N элементов (для «последних N» в плейлисте).
+--cookies-from-browser / --cookies  доступ к приватному плейлисту (см. subs.add_cookie_args).
 Вывод: JSON {"playlist": <название>, "count": N, "entries": [{id, title, url}, ...]}.
 Если URL — одиночное видео, вернёт один элемент.
 """
 from __future__ import annotations
 
+import argparse
 import json
 import sys
 
+import subs as subs_mod
+
 
 def main(argv: list[str]) -> int:
-    if len(argv) != 1:
-        print(json.dumps({"error": "Ожидается один аргумент: URL плейлиста"},
-                         ensure_ascii=False))
-        return 1
-    url = argv[0]
+    ap = argparse.ArgumentParser()
+    ap.add_argument("url")
+    ap.add_argument("--limit", type=int, default=None, help="вернуть только первые N элементов")
+    subs_mod.add_cookie_args(ap)
+    args = ap.parse_args(argv)
+    url = args.url
     try:
         from yt_dlp import YoutubeDL
     except ImportError:
@@ -28,6 +35,9 @@ def main(argv: list[str]) -> int:
         "skip_download": True,
         "extract_flat": "in_playlist",  # не лезть в каждое видео — только список
     }
+    if args.limit and args.limit > 0:
+        opts["playlistend"] = args.limit
+    opts.update(subs_mod.cookie_opts(args))
     try:
         with YoutubeDL(opts) as ydl:
             info = ydl.extract_info(url, download=False)
